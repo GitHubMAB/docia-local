@@ -36,5 +36,16 @@ def test_nom_normalise_accents_et_ordre():
     assert normalize("Hélène DURAND") == normalize("DURAND Helene")
 
 
+def test_nom_format_nom_virgule_prenom():
+    # Régression trouvée par l'éval : qwen2.5:3b renvoie parfois « Martin, Camille »
+    assert normalize("Martin, Camille") == normalize("Camille MARTIN")
+
+
+def test_pas_de_fausse_alerte_sur_format_du_nom():
+    docs = dossier()
+    docs[1] = Extraction(type_document="avis_imposition", nom="Martin, Camille", revenu_fiscal_reference=26900)
+    assert check_dossier(docs) == []
+
+
 def test_piece_manquante():
     assert codes(check_dossier(dossier()[:2])) == ["PIECE_MANQUANTE"]

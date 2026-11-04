@@ -3,7 +3,7 @@ Contrôles de cohérence et de fraude, en Python pur (déterministes, testables,
 
 Bonne pratique : le LLM extrait, le code décide. Les règles métier restent auditables.
 """
-
+import re
 import unicodedata
 
 from docia.schema import Extraction
@@ -18,6 +18,7 @@ def normalize(name: str | None) -> str:
     if not name:
         return ""
     text = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    text = re.sub(r"[^A-Za-z0-9]+", " ", text)  # virgules, tirets, points -> espaces
     return " ".join(sorted(text.upper().split()))  # ordre prénom / nom indifférent
 
 
