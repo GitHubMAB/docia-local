@@ -8,17 +8,26 @@ on:
     - cron: "17 3 * * *"   # éval de nuit : détecte une dérive sans changement de code
   workflow_dispatch:
     inputs:
+      provider:
+        description: "Fournisseur LLM"
+        type: choice
+        options: [ollama, gemini]
+        default: ollama
       model:
-        description: "Modèle GitHub Models à évaluer"
-        default: "openai/gpt-4o-mini"
+        description: "Modèle (vide = modèle par défaut du fournisseur)"
+        default: ""
 
 permissions:
   contents: read
-  models: read          # donne accès à GitHub Models au GITHUB_TOKEN (gratuit)
 
 concurrency:
   group: docia-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Par défaut (push, PR, nuit) : Gemini si le secret existe, sinon Ollama (aucune clé nécessaire).
+  LLM_PROVIDER: ${{ inputs.provider || (secrets.GEMINI_API_KEY != '' && 'gemini' || 'ollama') }}
+  LLM_MODEL: ${{ inputs.model }}
 
 jobs:
   tests:
@@ -37,7 +46,7 @@ jobs:
     name: CT - évaluation LLM
     needs: tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,12 +55,22 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python generate_samples.py
+
+      - name: Démarrer Ollama (modèle local sur le runner)
+        if: env.LLM_PROVIDER == 'ollama'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          (ollama serve > /tmp/ollama.log 2>&1 &)
+          sleep 5
+          ollama pull "${LLM_MODEL:-qwen2.5:3b}"
+
       - name: Évaluation
         env:
-          LLM_PROVIDER: github
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LLM_MODEL: ${{ inputs.model || 'openai/gpt-4o-mini' }}
-        run: python eval.py
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "Fournisseur : $LLM_PROVIDER"
+          python eval.py
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
