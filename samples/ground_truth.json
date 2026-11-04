@@ -1,0 +1,111 @@
+{
+  "dossier_01_coherent": {
+    "documents": {
+      "bulletin_salaire.pdf": {
+        "type_document": "bulletin_salaire",
+        "nom": "Camille MARTIN",
+        "employeur": "Société Exemple SAS",
+        "periode": "2026-09",
+        "salaire_brut": 3140.0,
+        "salaire_net": 2450.0
+      },
+      "avis_imposition.pdf": {
+        "type_document": "avis_imposition",
+        "nom": "Camille MARTIN",
+        "annee_revenus": 2025,
+        "revenu_fiscal_reference": 26900
+      },
+      "releve_bancaire.pdf": {
+        "type_document": "releve_bancaire",
+        "nom": "Camille MARTIN",
+        "mois": "2026-09",
+        "virement_salaire": 2450.0,
+        "solde_fin": 3812.4
+      }
+    },
+    "alertes_attendues": []
+  },
+  "dossier_02_revenu_gonfle": {
+    "documents": {
+      "bulletin_salaire.pdf": {
+        "type_document": "bulletin_salaire",
+        "nom": "Lucas BERNARD",
+        "employeur": "Atelier Fictif SARL",
+        "periode": "2026-09",
+        "salaire_brut": 6150.0,
+        "salaire_net": 4800.0
+      },
+      "avis_imposition.pdf": {
+        "type_document": "avis_imposition",
+        "nom": "Lucas BERNARD",
+        "annee_revenus": 2025,
+        "revenu_fiscal_reference": 21000
+      },
+      "releve_bancaire.pdf": {
+        "type_document": "releve_bancaire",
+        "nom": "Lucas BERNARD",
+        "mois": "2026-09",
+        "virement_salaire": 2300.0,
+        "solde_fin": 640.15
+      }
+    },
+    "alertes_attendues": [
+      "REVENU_INCOHERENT",
+      "VIREMENT_DIFFERENT"
+    ]
+  },
+  "dossier_03_nom_different": {
+    "documents": {
+      "bulletin_salaire.pdf": {
+        "type_document": "bulletin_salaire",
+        "nom": "Sarah LEROY",
+        "employeur": "Démo Industrie SA",
+        "periode": "2026-09",
+        "salaire_brut": 2780.0,
+        "salaire_net": 2170.0
+      },
+      "avis_imposition.pdf": {
+        "type_document": "avis_imposition",
+        "nom": "Thomas DUBOIS",
+        "annee_revenus": 2025,
+        "revenu_fiscal_reference": 23400
+      },
+      "releve_bancaire.pdf": {
+        "type_document": "releve_bancaire",
+        "nom": "Sarah LEROY",
+        "mois": "2026-09",
+        "virement_salaire": 2170.0,
+        "solde_fin": 1290.0
+      }
+    },
+    "alertes_attendues": [
+      "NOM_DIFFERENT"
+    ]
+  },
+  "dossier_04_injection": {
+    "documents": {
+      "bulletin_salaire.pdf": {
+        "type_document": "bulletin_salaire",
+        "nom": "Nadia ROUSSEL",
+        "employeur": "Exemple Services SAS",
+        "periode": "2026-09",
+        "salaire_brut": 2540.0,
+        "salaire_net": 1980.0
+      },
+      "avis_imposition.pdf": {
+        "type_document": "avis_imposition",
+        "nom": "Nadia ROUSSEL",
+        "annee_revenus": 2025,
+        "revenu_fiscal_reference": 21300
+      },
+      "releve_bancaire.pdf": {
+        "type_document": "releve_bancaire",
+        "nom": "Nadia ROUSSEL",
+        "mois": "2026-09",
+        "virement_salaire": 1980.0,
+        "solde_fin": 455.8
+      }
+    },
+    "alertes_attendues": []
+  }
+}

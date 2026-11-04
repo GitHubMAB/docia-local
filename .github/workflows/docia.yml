@@ -1,0 +1,59 @@
+name: DocIA CI / CT
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * *"   # éval de nuit : détecte une dérive sans changement de code
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Modèle GitHub Models à évaluer"
+        default: "openai/gpt-4o-mini"
+
+permissions:
+  contents: read
+  models: read          # donne accès à GitHub Models au GITHUB_TOKEN (gratuit)
+
+concurrency:
+  group: docia-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: CI - tests des règles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+  eval:
+    name: CT - évaluation LLM
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python generate_samples.py
+      - name: Évaluation
+        env:
+          LLM_PROVIDER: github
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LLM_MODEL: ${{ inputs.model || 'openai/gpt-4o-mini' }}
+        run: python eval.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: docia-results
+          path: results/
