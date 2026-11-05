@@ -46,6 +46,7 @@ def test_pas_de_fausse_alerte_sur_format_du_nom():
     docs[1] = Extraction(type_document="avis_imposition", nom="Martin, Camille", revenu_fiscal_reference=26900)
     assert check_dossier(docs) == []
 
+
 def test_avis_ancien():
     docs = [
         Extraction(type_document="bulletin_salaire", nom="Julien FABRE", periode="2026-09", salaire_net=3900),
@@ -62,6 +63,7 @@ def test_avis_recent_accepte():
     docs[1] = Extraction(type_document="avis_imposition", nom="Camille MARTIN", annee_revenus=2025,
                          revenu_fiscal_reference=26900)
     assert check_dossier(docs) == []
+
 
 def test_piece_manquante():
     assert codes(check_dossier(dossier()[:2])) == ["PIECE_MANQUANTE"]

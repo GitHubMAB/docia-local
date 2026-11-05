@@ -1,6 +1,6 @@
 """Schéma de sortie attendu du LLM, validé par Pydantic (étape « Validation » du cas pratique)."""
 
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -22,3 +22,17 @@ class Extraction(BaseModel):
     solde_fin: Optional[float] = None
     # Auto-évaluation du modèle
     confiance: float = Field(1.0, ge=0, le=1)
+
+
+CodeAlerte = Literal["NOM_DIFFERENT", "REVENU_INCOHERENT", "VIREMENT_DIFFERENT", "AVIS_ANCIEN", "PIECE_MANQUANTE"]
+
+
+class AlerteLLM(BaseModel):
+    code: CodeAlerte
+    explication: str
+
+
+class AnalyseLLM(BaseModel):
+    """Verdict du LLM sur la cohérence d'un dossier complet."""
+    coherent: bool
+    alertes: List[AlerteLLM] = []

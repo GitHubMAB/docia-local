@@ -107,5 +107,34 @@
       }
     },
     "alertes_attendues": []
+  },
+  "dossier_05_avis_ancien": {
+    "documents": {
+      "bulletin_salaire.pdf": {
+        "type_document": "bulletin_salaire",
+        "nom": "Julien FABRE",
+        "employeur": "Conseil Fictif SAS",
+        "periode": "2026-09",
+        "salaire_brut": 5000.0,
+        "salaire_net": 3900.0
+      },
+      "avis_imposition.pdf": {
+        "type_document": "avis_imposition",
+        "nom": "Julien FABRE",
+        "annee_revenus": 2022,
+        "revenu_fiscal_reference": 18500
+      },
+      "releve_bancaire.pdf": {
+        "type_document": "releve_bancaire",
+        "nom": "Julien FABRE",
+        "mois": "2026-09",
+        "virement_salaire": 3900.0,
+        "solde_fin": 2104.7
+      }
+    },
+    "alertes_attendues": [
+      "AVIS_ANCIEN",
+      "REVENU_INCOHERENT"
+    ]
   }
 }
