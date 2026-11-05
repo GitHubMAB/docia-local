@@ -3,6 +3,7 @@ Contrôles de cohérence et de fraude, en Python pur (déterministes, testables,
 
 Bonne pratique : le LLM extrait, le code décide. Les règles métier restent auditables.
 """
+
 import re
 import unicodedata
 
@@ -47,6 +48,15 @@ def check_dossier(docs: list[Extraction]) -> list[dict]:
             alerts.append({"code": "VIREMENT_DIFFERENT",
                            "detail": f"Bulletin {bulletin.salaire_net:.2f} € contre virement "
                                      f"{releve.virement_salaire:.2f} €"})
+
+    # L'avis doit porter sur les revenus récents : au plus 2 ans avant la période du bulletin.
+    annee = re.search(r"(19|20)\d{2}", bulletin.periode or "") if bulletin else None
+    if annee and avis and avis.annee_revenus:
+        annee_bulletin = int(annee.group())
+        if annee_bulletin - avis.annee_revenus > 2:
+            alerts.append({"code": "AVIS_ANCIEN",
+                           "detail": f"Avis sur les revenus {avis.annee_revenus} pour un bulletin "
+                                     f"de {bulletin.periode} : demander l'avis le plus récent"})
 
     missing = {"bulletin_salaire", "avis_imposition", "releve_bancaire"} - by_type.keys()
     if missing:
