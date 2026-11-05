@@ -76,3 +76,42 @@ jobs:
         with:
           name: docia-results
           path: results/
+
+  publish:
+    name: Dashboard - publier l'historique
+    needs: eval
+    # Même si l'éval échoue : un échec doit apparaître dans l'historique. Pas pour les PR.
+    if: always() && needs.eval.result != 'skipped' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write     # pousser sur la branche gh-pages
+    concurrency:
+      group: docia-pages  # deux runs ne publient jamais en même temps
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: docia-results
+          path: results/
+        continue-on-error: true
+      - name: Mettre à jour l'historique et publier sur gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -f results/metrics.json ]; then echo "Pas de métriques à publier"; exit 0; fi
+          mkdir site && cd site
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth 1 origin gh-pages; then git checkout -q gh-pages; else git checkout -q --orphan gh-pages; fi
+          cd ..
+          python dashboard/update_history.py results/metrics.json site/data/history.json
+          cp dashboard/index.html site/index.html
+          touch site/.nojekyll
+          cd site
+          git add -A
+          git commit -q -m "Run ${GITHUB_RUN_ID} : métriques DocIA" || { echo "Rien de nouveau"; exit 0; }
+          git push -q origin gh-pages
+          echo "Dashboard : https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_STEP_SUMMARY"

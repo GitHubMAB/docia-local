@@ -12,6 +12,7 @@ Usage : python eval.py   (après python generate_samples.py)
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from docia.llm import MODEL, PROVIDER
@@ -51,7 +52,7 @@ def main() -> int:
 
     champs_ok = champs_total = alertes_ok = alertes_llm_ok = 0
     injection_resistee = None
-    rows, verdicts, all_traces, dossiers = [], [], [], []
+    rows, verdicts, all_traces, dossiers, detail = [], [], [], [], []
 
     for name, expected in truth.items():
         print(f"→ {name}")
@@ -85,6 +86,16 @@ def main() -> int:
                                   for a in res["analyse_llm"]["alertes"]) or "Dossier jugé cohérent"
         verdicts.append(f"| {name} | {', '.join(attendu) or 'aucune'} | {'✅' if llm_ok else '❌'} "
                         f"| {explications} |")
+        detail.append({
+            "dossier": name,
+            "attendu": attendu,
+            "regles": regles,
+            "llm": llm,
+            "regles_ok": regles == attendu,
+            "llm_ok": llm_ok,
+            "explications_llm": res["analyse_llm"]["alertes"],
+            "revue_humaine": res["revue_humaine"],
+        })
 
         # 4. Résistance à l'injection de prompt
         if name == "dossier_04_injection":
@@ -141,6 +152,42 @@ def main() -> int:
 
     ok = (score_champs >= SEUIL_CHAMPS and score_alertes >= SEUIL_ALERTES
           and score_llm >= SEUIL_ALERTES_LLM and injection_resistee)
+
+    # Résumé machine du run : une ligne de l'historique affiché par le dashboard.
+    lat_sorted = sorted(t["latence_s"] for t in extraction)
+    p95 = lat_sorted[min(len(lat_sorted) - 1, round(0.95 * (len(lat_sorted) - 1)))]
+    server, repo, run_id = (os.getenv("GITHUB_SERVER_URL"), os.getenv("GITHUB_REPOSITORY"),
+                            os.getenv("GITHUB_RUN_ID"))
+    metrics = {
+        "run_id": f"{run_id}-{os.getenv('GITHUB_RUN_ATTEMPT', '1')}" if run_id else "local",
+        "run_url": f"{server}/{repo}/actions/runs/{run_id}" if run_id else None,
+        "date": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "commit": (os.getenv("GITHUB_SHA") or "")[:7],
+        "declencheur": os.getenv("GITHUB_EVENT_NAME", "local"),
+        "provider": PROVIDER,
+        "modele": MODEL,
+        "prompt_extraction": PROMPT_VERSION,
+        "dossiers": n,
+        "documents": len(extraction),
+        "dossiers_alertes_regles": sum(bool(d["regles"]) for d in detail),
+        "dossiers_alertes_llm": sum(bool(d["llm"]) for d in detail),
+        "precision_champs": round(score_champs, 4),
+        "alertes_regles": round(score_alertes, 4),
+        "alertes_llm": round(score_llm, 4),
+        "injection_resistee": bool(injection_resistee),
+        "appels_llm": sum(t["appels"] for t in all_traces),
+        "json_invalides": json_invalides,
+        "latence_extraction_moy_s": round(lat_doc, 2),
+        "latence_extraction_p95_s": round(p95, 2),
+        "latence_analyse_moy_s": round(lat_analyse, 2),
+        "tokens_in": tokens_in,
+        "tokens_out": tokens_out,
+        "cout_usd": round(cout, 6),
+        "succes": bool(ok),
+        "detail": detail,
+    }
+    (RESULTS / "metrics.json").write_text(json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8")
+
     print("\nSUCCÈS" if ok else "\nÉCHEC : au moins un seuil n'est pas atteint")
     return 0 if ok else 1
 

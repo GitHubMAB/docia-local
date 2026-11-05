@@ -79,3 +79,16 @@ python eval.py      # affiche le coût du run et le coût projeté pour 20 000 d
 3. **Ajouter un dossier piège** dans `generate_samples.py` (pièce manquante, bulletin de 2023…).
 4. **Ajouter un juge LLM** : faire générer une synthèse du dossier, puis la faire noter de 1 à 5 par un second appel.
 5. **Exporter les traces** vers un outil d'observabilité gratuit (Langfuse en auto-hébergé, ou Grafana).
+
+## Dashboard d'historique (GitHub Pages, gratuit)
+
+Chaque run du workflow (hors PR) ajoute ses métriques à `data/history.json` sur la branche `gh-pages`,
+et y publie `dashboard/index.html`. Le dashboard affiche : dossiers traités, précision des champs,
+incohérences détectées (règles et LLM), latence moyenne et p95, tokens, JSON invalides, et pour chaque
+run le verdict et l'explication du LLM par dossier. Filtres : période et fournisseur / modèle.
+
+Activation (une seule fois, après le premier run réussi du job « Dashboard ») :
+repo → **Settings** → **Pages** → **Source : Deploy from a branch** → branche `gh-pages`, dossier `/ (root)` → **Save**.
+Adresse : `https://<ton-compte>.github.io/docia-local/` (aussi rappelée dans le **Summary** du run).
+
+Repo public = dashboard public : n'y mets que des données fictives, comme ici.
